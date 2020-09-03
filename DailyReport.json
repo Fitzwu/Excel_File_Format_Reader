@@ -33,27 +33,22 @@
     "level_1":{
         "SheetNum":1,
         "sheet_1":{
-            "SheetName":"每日信息汇总页",
-            "range":"[1,2]+[6,24]"
+            "SheetName":"每日信息汇总页"
         }
     },
     "level_2":{
         "SheetNum":3,
         "sheet_1":{
             "SheetName":"一电厂",
-            "range":"[1,2]+[8,26]"
+            "range":"[0,4]+[8,26]"
         },
         "sheet_2":{
             "SheetName":"二电厂",
-            "range":"[1,2]+[9,27]",
-            "startcol":9,
-            "endcol":27
+            "range":"[0,4]+[9,27]"
+
         },
         "sheet_3":{
-            "SheetName":"三电厂",
-            "range":"[1,2]+[6,24]",
-            "startcol":6,
-            "endcol":24
+            "SheetName":"三电厂"
         }
     }   
 

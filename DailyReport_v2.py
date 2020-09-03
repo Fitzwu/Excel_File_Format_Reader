@@ -1,8 +1,9 @@
+from InsideFile import InsideFile, config, OwnSheet
+import os
 import json
 import time
 import datetime
 import re
-import os
 import sys,getopt
 import csv
 import xlwt
@@ -19,96 +20,6 @@ except:
     print("\n 请确认配置文件 DailyReport.json 存在")
     pass
 m_jsonctx = json.load(jsonFile) #is a dict
-
-# 解析 json 文件中 range 
-def ParseRange(range_string, num1=0, num2=0):
-    rg = re.findall(r'\d+',range_string)
-    if not len(rg) == 2:
-        print("范围输入有错!\n")
-    return rg
-    
-
-
-def ctxget(ctx, name):
-    return ctx.get(name)
-
-class OwnSheet:
-    def __init__(self, range_list, SheetName = ""):
-        self.range_list = range_list
-        self.SheetName = SheetName
-        
-
-
-class config:
-    __sheet = None
-
-    def loadconf(self, level):
-        num = m_jsonctx['levels']
-        if level > num:
-            print("配置文件设置错误！\n")
-            return None
-        level_name = "level_{}".format(level)
-        mctx = ctxget(m_jsonctx, level_name)
-        return mctx
-
-    def makeSheetList(self):
-        self.SheetNum = ctxget(self.newctx,"SheetNum")
-        for i in range(self.SheetNum):
-            sheet_Flag = "sheet_{}".format(i + 1)
-            sheet_ctx = ctxget(self.newctx, sheet_Flag)
-            sheetName = ctxget(sheet_ctx, "SheetName")
-            str_range = ctxget(sheet_ctx, "range")
-            range_tmp = []
-            
-            num_range = str_range.split("+")
-            num = len(num_range)
-            for i in range(num):
-                strr = num_range[i]
-                range_tmp.append(ParseRange(strr))
-                pass
-            
-
-            sheet = OwnSheet(range_tmp, sheetName)
-            self.__sheet.append(sheet)
-
-
-    def __init__(self, level = 1):
-        self.__conf_file = ''
-        self.level = level
-        self.newctx = self.loadconf(self.level)
-        self.__sheet = []
-        if self.newctx == None:
-            print("配置文件设置错误！\n")
-            return None
-        else:
-            self.makeSheetList()
-
-    def getOwnsheet(self):
-        return self.__sheet
-        pass
-
-    
-
-class InsideFile:
-    name = ''
-    level = 1 # 1表示是第一层级 2表示是第二层级 以此类推
-    __path = ''
-    conf:config
-    def __init__(self, file, level, path):
-        self.name = file
-        self.level = level
-        self.__path = path
-        self.conf = config(self.level)
-
-    def File_Path(self):
-        return self.__path
-    
-
-
-    
-
-
-
 
 
 
@@ -147,10 +58,6 @@ def stdMap(power_name):
     pass
     return None
 
-
-
-
-
 '''
 Excel 读写
 读 用的是 xlrd
@@ -172,9 +79,9 @@ def WriteRowValue(sheet, src_value, dst_line):
     for i, value in enumerate(src_value):
         sheet.cell(dst_line + 1, i + 1, value)
         
-    for rows in range(1,sheet.max_row+1):
-        for cols in range(6,sheet.max_column+1):
-            sheet.cell(rows,cols).fill = PatternFill("solid",fgColor="92D050")
+    # for rows in range(1,sheet.max_row+1):
+    #     for cols in range(6,sheet.max_column+1):
+    #         sheet.cell(rows,cols).fill = PatternFill("solid",fgColor="92D050")
 
     return
 
@@ -196,19 +103,31 @@ def SaveSingleFile(single_file_name, single_file_path, file_config, dst_sheet):
             sheet = book.sheet_by_name(conf.SheetName)
             pass
         except:
-            print("\n",single_file_name,"中不存在名为 “", "{}".format(conf.SheetName) ,"” 的工作表页!\n请确保各文件中存在对应名称的工作表页\n请注意表页名称不能有空格或其他无关字符！\n")
+            print("\n",single_file_name,"中不存在名为 “", conf.SheetName ,"” 的工作表页!\n请确保各文件中存在对应名称的工作表页\n请注意表页名称不能有空格或其他无关字符！\n")
             os.system("pause")
             pass
 
         global m_src_LineNum
         # value = sheet.row_values(m_src_LineNum-1)
-        tmplist = []
-        for i in range(len(conf.range_list)/2):
-            tmplist.append(ReadLineValue(sheet, m_src_LineNum, conf.range_list[i], conf.range_list[i+1]))
+        tmplist = list()
+        tmplist.clear()
+        if not conf.range_list == None:
+            for i in range(len(conf.range_list)):
+                startcol = int(conf.range_list[i][0])
+                endcol = int(conf.range_list[i][1]) + 1
+                value = ReadLineValue(sheet, m_src_LineNum, startcol, endcol)
+                # print(type(value))  
+                # tmplist.insert(value)
+                tmplist += value
+                #TODO 拼接式读取
+        else:
+            value = ReadLineValue(sheet, m_src_LineNum)
+            # print(type(value))
+            tmplist += value
+            
 
-        dst_sheet.append(tmplist)
-        pass
-
+        WriteRowValue(dst_sheet, tmplist, dst_sheet.max_row+1)
+        # dst_sheet.append(value)
     
 
 
@@ -288,18 +207,6 @@ def Do():
 Do()
 
 
-    
-
-
-
-
-
-
-
-
-
-
-        
 
 
     
